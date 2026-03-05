@@ -5,6 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="${INFRA_DIR}/docker-compose.yml"
+DOCKER_BIN="${DOCKER_BIN:-/opt/homebrew/bin/docker}"
 
 BACKUP_FILE="${1:-}"
 TARGET_DB="${TARGET_DB:-ddg_restore}"
@@ -22,11 +23,11 @@ fi
 
 echo "[INFO] restore from $BACKUP_FILE to database $TARGET_DB"
 
-docker compose -f "$COMPOSE_FILE" exec -T postgres psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 <<SQL
+"$DOCKER_BIN" compose -f "$COMPOSE_FILE" exec -T postgres psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 <<SQL
 DROP DATABASE IF EXISTS ${TARGET_DB};
 CREATE DATABASE ${TARGET_DB};
 SQL
 
-gunzip -c "$BACKUP_FILE" | docker compose -f "$COMPOSE_FILE" exec -T postgres psql -U "$POSTGRES_USER" -d "$TARGET_DB" -v ON_ERROR_STOP=1
+gunzip -c "$BACKUP_FILE" | "$DOCKER_BIN" compose -f "$COMPOSE_FILE" exec -T postgres psql -U "$POSTGRES_USER" -d "$TARGET_DB" -v ON_ERROR_STOP=1
 
 echo "[DONE] restore completed: $TARGET_DB"

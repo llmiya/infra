@@ -5,22 +5,23 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="${INFRA_DIR}/docker-compose.yml"
+DOCKER_BIN="${DOCKER_BIN:-/opt/homebrew/bin/docker}"
 GRAFANA_PORT="${GRAFANA_PORT:-3000}"
 
 echo "[1/4] Checking container states"
-docker compose -f "$COMPOSE_FILE" ps
+"$DOCKER_BIN" compose -f "$COMPOSE_FILE" ps
 
 check_health() {
   local service="$1"
   local container_id
-  container_id="$(docker compose -f "$COMPOSE_FILE" ps -q "$service")"
+  container_id="$("$DOCKER_BIN" compose -f "$COMPOSE_FILE" ps -q "$service")"
   if [[ -z "$container_id" ]]; then
     echo "[FAIL] service '$service' not found"
     exit 1
   fi
 
   local status
-  status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id")"
+  status="$("$DOCKER_BIN" inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id")"
   if [[ "$status" != "healthy" && "$status" != "running" ]]; then
     echo "[FAIL] service '$service' status=$status"
     exit 1

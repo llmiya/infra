@@ -1,6 +1,7 @@
 .PHONY: up down check logs ps restart up-secure check-secure keychain-init keychain-export backup restore alert-test up-dingding-stream bridge-up bridge-down bridge-status
 
-COMPOSE = docker compose -f docker-compose.yml
+DOCKER_BIN ?= /opt/homebrew/bin/docker
+COMPOSE = $(DOCKER_BIN) compose -f docker-compose.yml
 
 BACKUP_FILE ?=
 

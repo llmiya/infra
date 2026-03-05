@@ -35,6 +35,10 @@ make -C infra keychain-init
 - `DINGTALK_WEBHOOK_URL`（webhook 模式）
 - `DINGTALK_APP_KEY` / `DINGTALK_APP_SECRET`（stream 模式）
 - `DINGTALK_ROBOT_CODE` / `DINGTALK_OPEN_CONVERSATION_ID`（stream 模式）
+- `DINGTALK_CHAT_ID`（stream 模式，可用于自动换取 `openConversationId`）
+- `DINGTALK_TARGET_MODE`（stream 目标：`group` / `user`）
+- `DINGTALK_USER_IDS`（stream 用户直发，逗号分隔）
+- `DINGTALK_USER_ID_FIELD`（stream 用户标识字段：`userIds` / `unionIds` / `openIds`）
 
 ### 注入并启动
 ```bash
@@ -51,8 +55,13 @@ bash infra/scripts/secrets_keychain.sh set dingtalk_app_key '<app_key>'
 bash infra/scripts/secrets_keychain.sh set dingtalk_app_secret '<app_secret>'
 bash infra/scripts/secrets_keychain.sh set dingtalk_robot_code '<robot_code>'
 bash infra/scripts/secrets_keychain.sh set dingtalk_open_conversation_id '<open_conversation_id>'
+bash infra/scripts/secrets_keychain.sh set dingtalk_target_mode 'user'
+bash infra/scripts/secrets_keychain.sh set dingtalk_user_ids '016835526352-1530023321'
+bash infra/scripts/secrets_keychain.sh set dingtalk_user_id_field 'userIds'
 make -C infra restart
 ```
+
+说明：`DINGTALK_USER_IDS` 需要填写钉钉 `staffId`，非手机号、unionId、openId。
 
 约束：真实密钥不写 `.env` 明文、不提交仓库。
 
@@ -64,6 +73,10 @@ make -C infra restart
 - `DINGTALK_MODE=noop`：仅记录不转发
 - `DINGTALK_MODE=webhook`：转发到 `DINGTALK_WEBHOOK_URL`
 - `DINGTALK_MODE=stream`：使用 `appKey/appSecret/robotCode/openConversationId` 调用钉钉开放接口发送消息
+
+说明：
+- 当 `DINGTALK_TARGET_MODE=group`（默认）时，若未配置 `DINGTALK_OPEN_CONVERSATION_ID`，桥接器会尝试使用 `DINGTALK_CHAT_ID` 自动查询并换取 `openConversationId`。
+- 当 `DINGTALK_TARGET_MODE=user` 时，桥接器使用 `DINGTALK_USER_IDS` 调用“单聊批量发送”接口，无需 `openConversationId`。
 
 桥接进程操作：
 ```bash
