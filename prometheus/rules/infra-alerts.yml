@@ -1,0 +1,29 @@
+groups:
+  - name: infra-alerts
+    rules:
+      - alert: ExporterDown
+        expr: up{job=~"postgres_exporter|redis_exporter"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Exporter down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} is down for more than 2 minutes"
+
+      - alert: PostgreSQLUnavailable
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL unavailable"
+          description: "PostgreSQL exporter reports pg_up=0"
+
+      - alert: RedisUnavailable
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis unavailable"
+          description: "Redis exporter reports redis_up=0"
