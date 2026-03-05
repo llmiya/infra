@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ddg_dev_password}
     ports:
       - "5432:5432"
+    cpus: ${POSTGRES_CPU_LIMIT:-1.0}
+    mem_limit: ${POSTGRES_MEM_LIMIT:-1g}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,6 +25,8 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+    cpus: ${REDIS_CPU_LIMIT:-0.5}
+    mem_limit: ${REDIS_MEM_LIMIT:-512m}
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -95,7 +99,7 @@ services:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:

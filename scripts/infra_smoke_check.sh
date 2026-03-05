@@ -2,7 +2,10 @@
 
 set -euo pipefail
 
-COMPOSE_FILE="infra/docker-compose.yml"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+INFRA_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+COMPOSE_FILE="${INFRA_DIR}/docker-compose.yml"
+GRAFANA_PORT="${GRAFANA_PORT:-3000}"
 
 echo "[1/4] Checking container states"
 docker compose -f "$COMPOSE_FILE" ps
@@ -51,7 +54,7 @@ retry_http() {
 echo "[3/4] Checking HTTP endpoints"
 retry_http http://127.0.0.1:9090/-/ready
 retry_http http://127.0.0.1:9093/-/ready
-retry_http http://127.0.0.1:3000/api/health
+retry_http "http://127.0.0.1:${GRAFANA_PORT}/api/health"
 echo "[OK] prometheus/alertmanager/grafana ready"
 
 echo "[4/4] Checking exporter targets"

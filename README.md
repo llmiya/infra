@@ -1,31 +1,61 @@
-# DDG Infra Project
+# Infra 主入口
 
-这是从主项目中拆出的基础设施子项目，目标是让 Infra 可独立维护、独立交付。
+`infra/` 是本仓库唯一基础设施主入口。兼容入口仅保留，不再新增能力。
 
-## 包含内容
-- Docker Compose 编排（PostgreSQL / Redis / Prometheus / Alertmanager / Grafana）
-- 告警规则与路由模板
-- 一键 smoke-check 脚本
-- 委派给其他 agent 的 SOP
+## 启动与验收（仓库根目录执行）
 
-## 运行
 ```bash
-cd infra
-make up
-make check
+make -C infra up
+make -C infra check
+make -C infra ps
+```
+
+## 密钥管理（macOS Keychain）
+
+```bash
+make -C infra keychain-init
+make -C infra up-secure
+make -C infra check-secure
+```
+
+说明：真实密钥只存储在本机 Keychain，不写入 `.env` 明文，不提交仓库。
+
+## 钉钉告警桥接（支持 webhook / stream）
+
+```bash
+make -C infra bridge-up
+make -C infra bridge-status
+make -C infra alert-test
+```
+
+Stream 模式启动：
+```bash
+make -C infra keychain-init
+make -C infra up-dingding-stream
+```
+
+## 备份与恢复
+
+```bash
+make -C infra backup
+latest_backup=$(cd infra && ls -t backups/*.sql.gz | head -n 1)
+TARGET_DB=ddg_restore make -C infra restore BACKUP_FILE="$latest_backup"
 ```
 
 ## 常用命令
-- `make up`：启动基础设施
-- `make check`：执行一键健康检查
-- `make ps`：查看服务状态
-- `make logs`：查看最近日志
-- `make down`：停止基础设施
-- `make restart`：重启全部服务
 
-> 兼容入口仍保留在仓库根目录：`make infra-up` 等命令会自动转发到 `infra/Makefile`。
+- `make -C infra up`：启动基础设施
+- `make -C infra check`：执行健康检查
+- `make -C infra ps`：查看服务状态
+- `make -C infra logs`：查看最近日志
+- `make -C infra down`：停止基础设施
+- `make -C infra restart`：重启全部服务
+- `make -C infra bridge-up`：启动钉钉桥接进程
+- `make -C infra bridge-down`：停止钉钉桥接进程
+- `make -C infra bridge-status`：查看钉钉桥接状态与日志
+- `make -C infra up-dingding-stream`：以 Stream 模式启动并加载 Keychain 密钥
 
-## 建议下一步
-- 将 `infra/` 目录拆为独立仓库
-- 在 CI 中增加专用 Infra Pipeline（lint + compose up + smoke-check）
-- 接入企业告警网关（Slack/飞书/钉钉）
+## 文档
+
+- 操作手册：`infra/docs/infra-sop.md`
+- 验收回传：`infra/docs/acceptance-report.md`

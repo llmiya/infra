@@ -1,0 +1,4 @@
+backups/*.sql.gz
+alertmanager/mock_receiver.log
+.runtime/
+scripts/__pycache__/
